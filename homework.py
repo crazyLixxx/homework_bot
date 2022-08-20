@@ -1,11 +1,25 @@
-...
+import logging
+import os
+import sys
 
+import requests
+import time
+
+from dotenv import load_dotenv
+
+# заводим логер
+logger = logging.getLogger()
+streamHandler = logging.StreamHandler(sys.stdout)
+formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
+streamHandler.setFormatter(formatter)
+logger.addHandler(streamHandler)
+
+
+# Забираем секреты из окружения
 load_dotenv()
-
-
-PRACTICUM_TOKEN = ...
-TELEGRAM_TOKEN = ...
-TELEGRAM_CHAT_ID = ...
+PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
+TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
+TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
 RETRY_TIME = 600
 ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
@@ -20,26 +34,24 @@ HOMEWORK_STATUSES = {
 
 
 def send_message(bot, message):
-    ...
+    pass
 
 
 def get_api_answer(current_timestamp):
     timestamp = current_timestamp or int(time.time())
     params = {'from_date': timestamp}
-
-    ...
+    response = request.get(ENDPOINT, headers=HEADERS, params=params)
 
 
 def check_response(response):
+    params = {'from_date': time.time()}
+    
 
-    ...
 
 
 def parse_status(homework):
     homework_name = ...
     homework_status = ...
-
-    ...
 
     verdict = ...
 
@@ -49,7 +61,17 @@ def parse_status(homework):
 
 
 def check_tokens():
-    ...
+    '''Провенряет наличие секретов'''
+    if PRACTICUM_TOKEN is None:
+        logging.critical('Не удалось найти токен Практикума')
+        return False
+    elif TELEGRAM_TOKEN is None:
+        logging.critical('Не удалось найти токен Telegram')
+        return False
+    elif TELEGRAM_CHAT_ID is None:
+        logging.critical('Не удалось найти id чата пользователя')
+        return False
+    return True
 
 
 def main():
