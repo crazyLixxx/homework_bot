@@ -2,30 +2,45 @@ import http
 import logging
 import os
 import sys
-import time
 
 import requests
+import time
+
+from telegram import Bot
 
 from dotenv import load_dotenv
 
-from exception_set import PractikumApiNotOKException
+from exceptions import (
+    HomeworkIsntADicException,
+    GetNoAnswerException,
+    GetNot200AnswerException,
+    NoHomeworksInAnswerException,
+    NotDocumentedStatusException,
+    NoDictInApiAnsewerException,
+    NotEnouthSecrets,
+)
 
-# заводим логер
+# Заводим логер
 logger = logging.getLogger()
-streamhandler = logging.StreamHandler(sys.stdout)
+streamHandler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
-streamhandler.setFormatter(formatter)
-logger.addHandler(streamhandler)
+streamHandler.setFormatter(formatter)
+logger.addHandler(streamHandler)
 
 
-# забираем секреты из окружения
+# Забираем секреты из окружения
 load_dotenv()
 PRACTICUM_TOKEN = os.getenv('PRACTICUM_TOKEN')
 TELEGRAM_TOKEN = os.getenv('TELEGRAM_TOKEN')
 TELEGRAM_CHAT_ID = os.getenv('TELEGRAM_CHAT_ID')
 
+
+# Взводим бота
+bot = Bot(token=TELEGRAM_TOKEN)
+
+
 RETRY_TIME = 600
-ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/1'
+ENDPOINT = 'https://practicum.yandex.ru/api/user_api/homework_statuses/'
 HEADERS = {'Authorization': f'OAuth {PRACTICUM_TOKEN}'}
 
 
@@ -36,20 +51,16 @@ HOMEWORK_STATUSES = {
 }
 
 
-def get_api_answer(current_timestamp):
-    '''Проверяем работоспособность api и возвращаем ответ словарём'''
-    timestamp = current_timestamp or int(time.time())
-    params = {'from_date': timestamp}
-
+def send_message(bot: Bot, message: str) -> None:
+    """Если статус домашки изменился - отправляем в тг."""
     try:
-        response = requests.get(ENDPOINT, headers=HEADERS, params=params)
+        bot.send_message(TELEGRAM_CHAT_ID, message)
     except Exception as error:
-        logging.error(f'Ошибка при запросе к апи Практикума: {error}')
+        logging.error(f'Не могу отправить сообщение в тг: {error}')
 
-    if response.status_code != http.HTTPStatus.OK:
-        logging.error('api отдаёт отличный от 200 код')
-        raise PractikumApiNotOKException()
-    else:
-        return response.json()
+message = (
+    'Изменился статус проверки работы "username__hw_python_oop.zip".'
+    'Работа проверена: у ревьюера есть замечания.'
+)
 
-print(get_api_answer(int(time.time())))
+send_message(bot, message)
