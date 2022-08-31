@@ -51,16 +51,33 @@ HOMEWORK_STATUSES = {
 }
 
 
-def send_message(bot: Bot, message: str) -> None:
-    """Если статус домашки изменился - отправляем в тг."""
-    try:
-        bot.send_message(TELEGRAM_CHAT_ID, message)
-    except Exception as error:
-        logging.error(f'Не могу отправить сообщение в тг: {error}')
+def parse_status(homework: dict) -> str:
+    """Получаем статус конкретной домашней работы."""
+    logging.debug('Начинаем проверку статуса домашки')
+    if isinstance(homework, dict):
+        try:
+            homework_name = homework.get('homework_name')
+            homework_status = homework.get('status')
+            verdict = HOMEWORK_STATUSES[homework_status]
+            logging.debug('Статус домашки найден, сообщение готово')
+            return f'Изменился статус проверки работы "{homework_name}". {verdict}'
+        except KeyError:
+            logging.error(
+                f'Обнаружен недокументированный статус {homework_status}'
+            )
+            raise NotDocumentedStatusException()
+    logging.error('Домашка не в словаре')
+    raise HomeworkIsntADicException()
 
-message = (
-    'Изменился статус проверки работы "username__hw_python_oop.zip".'
-    'Работа проверена: у ревьюера есть замечания.'
-)
 
-send_message(bot, message)
+
+message = {
+        "id":124,
+        "status":"rejected",
+        "homework_name":"username__hw_python_oop.zip",
+        "reviewer_comment":"Код не по PEP8, нужно исправить",
+        "date_updated":"2020-02-13T16:42:47Z",
+        "lesson_name":"Итоговый проект"
+}
+
+print(parse_status(message))
