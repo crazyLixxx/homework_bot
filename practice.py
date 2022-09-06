@@ -22,6 +22,7 @@ from exceptions import (
 
 # Заводим логер
 logger = logging.getLogger()
+logger.setLevel(logging.DEBUG)
 streamHandler = logging.StreamHandler(sys.stdout)
 formatter = logging.Formatter('%(asctime)s %(levelname)s %(message)s')
 streamHandler.setFormatter(formatter)

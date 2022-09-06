@@ -1,3 +1,9 @@
+class CantSendMess(Exception):
+    """Не можем достучаться до бота."""
+
+    pass
+
+
 class GetNoAnswerException(Exception):
     """Ответ апи вернул не словарь."""
 
@@ -5,13 +11,19 @@ class GetNoAnswerException(Exception):
 
 
 class GetNot200AnswerException(Exception):
-    """Ответ апи вернул не словарь."""
+    """Ответ апи отдаёт не тот код."""
 
     pass
 
 
 class HomeworkIsntADicException(Exception):
     """Домашка пришла не словарём."""
+
+    pass
+
+
+class HomeworksIsNtListException(TypeError):
+    """Список домашек не является списком"""
 
     pass
 
@@ -28,7 +40,13 @@ class NoHomeworksInAnswerException(Exception):
     pass
 
 
-class NoDictInApiAnsewerException(Exception):
+class NoDictInApiAnsewerException(TypeError):
+    """Ответ апи вернул не словарь."""
+
+    pass
+
+
+class NoNameInApiAnsewerException(KeyError):
     """Ответ апи вернул не словарь."""
 
     pass
