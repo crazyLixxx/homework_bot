@@ -74,8 +74,12 @@ def get_api_answer(current_timestamp: int) -> dict:
         raise GetNoAnswerException('Нет ответа от апи')
 
     if response.status_code != http.HTTPStatus.OK:
-        logging.error('api отдаёт отличный от 200 код')
-        raise GetNot200AnswerException('Получаем не 200-й')
+        raise GetNot200AnswerException(
+            f'Получаем неверный код ответа.'
+            f'Полученный код ответа: {response.status_code}.'
+            f'Параметры запроса: {response.request}'
+            f'Содержание ответа: {response.text}'
+        )
     else:
         logging.debug('Ответ апи получен и может быть сконвертирован')
         return response.json()
@@ -95,8 +99,9 @@ def check_response(response: dict) -> list:
                 logger.error('Домашки не в списке(')
                 raise HomeworksIsNtListException('Домашки пришли не списком')
         except KeyError:
-            logger.error('В апи нет списка статусов домашних работ')
-            raise NoHomeworksInAnswerException('Не найдены домашки')
+            raise NoHomeworksInAnswerException(
+                'В апи нет списка статусов домашних работ'
+            )
     else:
         logger.error('Апи вернуло не словарь')
         raise NoDictInApiAnsewerException('Из апи пришло нечто вместо словаря')
@@ -148,14 +153,13 @@ def main() -> None:
         try:
             response = get_api_answer(current_timestamp)
             homeworks = check_response(response)
-            if len(homeworks) > 0:
+            if homeworks:
                 for homework in homeworks:
                     message = parse_status(homework)
                     send_message(bot, message)
             else:
                 logging.debug('Новых статусов нет')
             current_timestamp = response['current_date']
-            time.sleep(RETRY_TIME)
         except Exception as error:
             message = f'Сбой в работе программы: {error}'
             logging.error(message)
@@ -165,8 +169,8 @@ def main() -> None:
                 send_message(bot, message)
                 cached_error = message
                 logging.info('Уведомили пользователя, ошибку закэшировали')
+        finally:
             time.sleep(RETRY_TIME)
-        else:
             logging.debug('Основная функция будет перезапущена')
 
 
