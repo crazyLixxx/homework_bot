@@ -56,8 +56,7 @@ def send_message(bot: telegram.Bot, message: str) -> None:
         bot.send_message(TELEGRAM_CHAT_ID, message)
         logging.info(f'В чат пользователя отправлено сообщение <{message}>')
     except Exception as error:
-        logging.error(f'Не могу отправить сообщение в тг: {error}')
-        raise CantSendMess('Не могу отправить сообщение в тг')
+        raise CantSendMess(f'Не могу отправить сообщение в тг: {error}')
 
 
 def get_api_answer(current_timestamp: int) -> dict:
@@ -70,8 +69,9 @@ def get_api_answer(current_timestamp: int) -> dict:
         response = requests.get(ENDPOINT, headers=HEADERS, params=params)
         logging.debug('Достучались до апи, получаем ответ')
     except Exception as error:
-        logging.error(f'Ошибка при запросе к апи Практикума: {error}')
-        raise GetNoAnswerException('Нет ответа от апи')
+        raise GetNoAnswerException(
+            f'Ошибка при запросе к апи Практикума: {error}'
+        )
 
     if response.status_code != http.HTTPStatus.OK:
         raise GetNot200AnswerException(
@@ -87,23 +87,21 @@ def get_api_answer(current_timestamp: int) -> dict:
 
 def check_response(response: dict) -> list:
     """Проверяем корректность ответа api и возвращем домашние работы."""
-    logger.debug('Начало проверки корректности ответа апи')
+    logging.debug('Начало проверки корректности ответа апи')
     if isinstance(response, dict):
         try:
             homeworks = response['homeworks']
-            logger.debug('Апи вернуло домашки')
+            logging.debug('Апи вернуло домашки')
             if isinstance(homeworks, list):
-                logger.debug('И они в списке!')
+                logging.debug('И они в списке!')
                 return homeworks
             else:
-                logger.error('Домашки не в списке(')
                 raise HomeworksIsNtListException('Домашки пришли не списком')
         except KeyError:
             raise NoHomeworksInAnswerException(
                 'В апи нет списка статусов домашних работ'
             )
     else:
-        logger.error('Апи вернуло не словарь')
         raise NoDictInApiAnsewerException('Из апи пришло нечто вместо словаря')
 
 
@@ -114,8 +112,7 @@ def parse_status(homework: dict) -> str:
         try:
             homework_name = homework['homework_name']
         except KeyError:
-            logging.error('Не найдено название домашки')
-            raise NoNameInApiAnsewerException('У домашки нет имени!')
+            raise NoNameInApiAnsewerException('Не найдено название домашки')
         try:
             homework_status = homework['status']
             verdict = HOMEWORK_STATUSES[homework_status]
@@ -124,12 +121,10 @@ def parse_status(homework: dict) -> str:
                 f'Изменился статус проверки работы "{homework_name}".{verdict}'
             )
         except KeyError:
-            logging.error(
+            raise NotDocumentedStatusException(
                 f'Обнаружен недокументированный статус {homework_status}'
             )
-            raise NotDocumentedStatusException('Недокументированный статус!')
     else:
-        logging.error('Домашка не в словаре')
         raise HomeworkIsntADicException('Домашка не в словаре')
 
 
